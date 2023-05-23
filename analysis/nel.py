@@ -28,6 +28,7 @@ class NamedEntityLinker:
                 entity = Entity(row['name'])
                 entity.frequency = int(row['frequency'])
                 entity.main_match = row['main_match']
+                entity.label = row['label']
                 self.entities_by_name[entity.name] = entity
 
     def remove_entites_below_frequency(self, frequency):
@@ -36,8 +37,10 @@ class NamedEntityLinker:
     def substitute_entites_by_ids(self, post_text):
         entities_in_post = self.__get_entities(post_text)
         for entity in entities_in_post:
-            if entity.name in self.entities_by_name:
-                post_text = post_text.replace(entity.name, self.entities_by_name[entity.name].main_match)
+            name = entity.name.lower()
+            if name in self.entities_by_name:
+                label = self.entities_by_name[name].label
+                post_text = post_text.replace(entity.name, label)
         
         return post_text
     
@@ -46,13 +49,13 @@ class NamedEntityLinker:
         named_entities = textacy.extract.basics.entities(doc)
         noun_chunks = textacy.extract.basics.noun_chunks(doc)
         acronyms = textacy.extract.acros.acronyms(doc)
-        #keyterms = textacy.extract.keyterms.textrank(doc)
+        keyterms = textacy.extract.keyterms.textrank(doc)
 
         entities = set()
         entities.update([entity.text for entity in named_entities])
         entities.update([entity.text for entity in noun_chunks])
         entities.update([entity.text for entity in acronyms])
-        #entities.update([entity[0] for entity in keyterms])
+        entities.update([entity[0] for entity in keyterms])
 
         return [Entity(entity) for entity in entities]
 

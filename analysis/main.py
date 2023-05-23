@@ -56,5 +56,18 @@ def perform_nel():
     nel.retrieve_wikidata_info(list(nel.entities_by_name.values()))
     nel.save_entities_to_file()
 
+def normalize():
+    logging.basicConfig(level=logging.INFO, filename='logs/normalize.log')
+    nel = NamedEntityLinker()
+    nel.load_entities_from_file('data/entities/entities.csv')
+    preProcessor = PreProcessor()
+    preProcessor.linker = nel
+    for file in os.listdir(constants.PREPROCESSED_DIRECTORY_TWITTER):
+        with open(os.path.join(constants.PREPROCESSED_DIRECTORY_TWITTER, file), 'r') as f:
+            logging.info(f'Loading file {file}')
+            posts = ijson.items(f, 'item')
+            posts = [Post.load_from_json(post) for post in posts]
+            preProcessor.normalize_posts(posts)
+
 if __name__ == '__main__':
-    perform_nel()
+    normalize()

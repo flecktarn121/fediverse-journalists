@@ -6,4 +6,5 @@ class Entity:
         self.secondary_matches = set()
         self.frequency = 0
         self.description = ''
+        self.label = ''
     

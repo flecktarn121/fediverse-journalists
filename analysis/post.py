@@ -49,4 +49,16 @@ class Post:
         text = html2text.html2text(mastodon_post['content'])
 
         return cls(id, timestamp, handle, user_id, user_bio, uri, text)
-
+    
+    @classmethod
+    def load_from_json(cls, json_post):
+            
+            id = json_post['id']
+            timestamp = json_post['timestamp']
+            handle = json_post['handle']
+            user_id = json_post['user_id']
+            user_bio = json_post['user_bio']
+            uri = json_post['uri']
+            text = json_post['text']
+    
+            return cls(id, timestamp, handle, user_id, user_bio, uri, text)
