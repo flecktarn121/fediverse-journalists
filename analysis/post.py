@@ -1,4 +1,6 @@
 import html2text
+import datetime
+from dateutil.parser import parse
 
 
 class Post:
@@ -54,7 +56,7 @@ class Post:
     def load_from_json(cls, json_post):
             
             id = json_post['id']
-            timestamp = json_post['timestamp']
+            timestamp = parse(json_post['timestamp'])
             handle = json_post['handle']
             user_id = json_post['user_id']
             user_bio = json_post['user_bio']
