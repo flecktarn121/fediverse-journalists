@@ -1,5 +1,4 @@
 import html2text
-import datetime
 from dateutil.parser import parse
 
 
@@ -14,16 +13,18 @@ class Post:
         self.uri = uri
         self.text = text
         self.tokenized_text = []
+        self.entities = []
 
     def to_dict(self):
         return {
             'id': self.id,
-            'timestamp': self.timestamp,
+            'timestamp': str(self.timestamp),
             'handle': self.handle,
             'user_id': self.user_id,
             'user_bio': self.user_bio,
             'uri': self.uri,
-            'text': self.text
+            'text': self.text,
+            'entities': list(self.entities)
         }
     
     @classmethod
@@ -62,5 +63,9 @@ class Post:
             user_bio = json_post['user_bio']
             uri = json_post['uri']
             text = json_post['text']
+            entities = json_post['entities']
+
+            post = cls(id, timestamp, handle, user_id, user_bio, uri, text)
+            post.entities = entities
     
-            return cls(id, timestamp, handle, user_id, user_bio, uri, text)
+            return post

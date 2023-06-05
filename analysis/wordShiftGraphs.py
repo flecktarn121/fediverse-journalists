@@ -10,21 +10,20 @@ class WordShiftGraphGenerator:
         self.term_frequencies_corpus_b = {}
     
     def generate_graph(self, label_corpus_a, label_corpus_b, title): 
-        jsd_shift = shifterator.JSDivergenceShift(type2freq_1=self.term_frequencies_corpus_a, type2freq_2=self.term_frequencies_corpus_b, weight_1=0.5, weight_2=0.5, base=2, alpha=1)
-        jsd_shift.get_shift_graph(title=title, label_1=label_corpus_a, label_2=label_corpus_b, filename='word_shift_graphs/' + title + '.html')
+        jsd_shift = shifterator.EntropyShift(type2freq_1=self.term_frequencies_corpus_a, type2freq_2=self.term_frequencies_corpus_b, base=2, alpha=1)
+        #jsd_shift.get_shift_graph(title=title, label_1=label_corpus_a, label_2=label_corpus_b, filename= title + '.svg')
+        #same line but without showing the graph
+        jsd_shift.get_shift_graph(title=title, label_1=label_corpus_a, label_2=label_corpus_b, filename= title + '.svg', show_plot=False)
     
 if __name__ == '__main__':
     frequenciesCalculator = FrequenciesCalculator()
 
-    frequenciesCalculator.load_posts_from_directory(constants.NORMALIZED_DIRECTORY + 'twitter/')
-    frequenciesCalculator.update_frequencies()
-    frequenciesCalculator.save_frequencies(constants.FREQUENCIES_DIRECTORY + 'twitter.json')
-    twitter_frequencies = frequenciesCalculator.term_frequencies
+    
+    twitter_frequencies = frequenciesCalculator.load_precalculated_frequencies_from_file(constants.FREQUENCIES_DIRECTORY + '/twitter.json')
 
-    frequenciesCalculator.load_posts_from_directory(constants.NORMALIZED_DIRECTORY + 'mastodon/')
-    frequenciesCalculator.update_frequencies()
-    frequenciesCalculator.save_frequencies(constants.FREQUENCIES_DIRECTORY + 'mastodon.json')
-    mastodon_frequencies = frequenciesCalculator.term_frequencies
+
+    
+    mastodon_frequencies = frequenciesCalculator.load_precalculated_frequencies_from_file(constants.FREQUENCIES_DIRECTORY + '/mastodon.json')
 
     generator = WordShiftGraphGenerator()
     generator.term_frequencies_corpus_a = twitter_frequencies

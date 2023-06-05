@@ -1,4 +1,5 @@
 import constants
+import spacy
 import datetime
 import logging
 import os
@@ -13,6 +14,7 @@ class FrequenciesCalculator:
 
     def __init__(self):
         self.common_words = set()
+        self.nlp = spacy.load(constants.SPACY_MODEL)
         self.term_frequencies = {}
         self.term_frequencies_by_timestamp = {}
     
@@ -20,16 +22,15 @@ class FrequenciesCalculator:
         posts = []
         for filename in os.listdir(directory):
             with open(f'{directory}/{filename}', 'r', encoding='utf-8') as file:
-                json_posts = ijson.items(file, 'item')
-                posts += [Post.load_from_json(json_post) for json_post in json_posts]
+                posts = ijson.items(file, 'item')
+                posts = [Post.load_from_json(post) for post in posts]
                 self.__tokenize_posts(posts)
                 for post in posts:
-                    self.update_frequencies(post)
+                    #self.update_frequencies(post)
                     self.update_frequencies_by_time(post,constants.ROUNDING_TIME)
-            break
     
     def update_frequencies(self, post):
-        for token in post.tokenized_text:
+        for token in post.tokenized_text + post.entities:
             if token not in self.term_frequencies:
                 self.term_frequencies[token] = 0
             self.term_frequencies[token] += 1
@@ -38,15 +39,14 @@ class FrequenciesCalculator:
         post.timestamp = self.__round_timestamp(post.timestamp, rounding_time)
 
         if post.timestamp not in self.term_frequencies_by_timestamp:
-            self.term_frequencies_by_timestamp[post.timestamp] = {}
+            self.term_frequencies_by_timestamp[post.timestamp.timestamp()] = {}
         
-        tokens = chain.from_iterable(post.tokenized_text) 
-        token_frequencies = Counter(tokens)
+        token_frequencies = Counter(post.tokenized_text)
 
         for token, frequency in token_frequencies.items():
-            if token not in self.term_frequencies_by_timestamp[post.timestamp]:
-                self.term_frequencies_by_timestamp[post.timestamp][token] = 0
-            self.term_frequencies_by_timestamp[post.timestamp][token] += frequency
+            if token not in self.term_frequencies_by_timestamp[post.timestamp.timestamp()]:
+                self.term_frequencies_by_timestamp[post.timestamp.timestamp()][token] = 0
+            self.term_frequencies_by_timestamp[post.timestamp.timestamp()][token] += frequency
     
     def save_frequencies(self, filename):
         self.__save_frequencies(self.term_frequencies, filename)
@@ -54,10 +54,10 @@ class FrequenciesCalculator:
     def save_frequencies_by_time(self, filename):
         self.__save_frequencies(self.term_frequencies_by_timestamp, filename)
 
-    def load_precalculated_frequencies_from_file(filename):
+    def load_precalculated_frequencies_from_file(self, filename):
         frequencies = {}
         with open(filename, 'r', encoding='utf-8') as file:
-            frequencies = json.load(file)
+            frequencies = dict(sorted(json.load(file).items()))
     
         return frequencies
 
@@ -66,30 +66,25 @@ class FrequenciesCalculator:
             json.dump(frequencies, file, indent=4, ensure_ascii=False)
         
     def __round_timestamp(self, timestamp, rounding):
-        discard = datetime.timedelta(minutes=timestamp.minute % rounding,
-                               seconds=timestamp.second,
-                               microseconds=timestamp.microsecond)
-        timestamp -= discard
-  
-        if discard >= datetime.timedelta(minutes=rounding/2):
-            timestamp += datetime.timedelta(minutes=rounding)
-        
-        return timestamp
+        #new_timestamp = timestamp - datetime.timedelta(days=timestamp.weekday())
+        new_timestamp = timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
+        return new_timestamp
 
     def __tokenize_posts(self, posts):
         for post in posts:
             tokens = post.text.split(' ') #already processed, no need to use tokenizer
+            tokens = [token for token in tokens if 'http'not in token and 'tag' not in token and '@' not in token]
             post.tokenized_text = [token.lower() for token in tokens if token in self.common_words or len(self.common_words) == 0]
 
-    def load_common_words(self):
-        with open(constants.COMMON_WORDS, 'r', encoding='utf-8') as file:
-            for line in file:
-                self.common_words.add(line.strip('\t')[0])
-    
-
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-    frequencies_calculator = FrequenciesCalculator()
-    frequencies_calculator.load_posts_from_directory(constants.NORMALIZED_DIRECTORY+'/mastodon')
-    frequencies_calculator.save_frequencies_by_time('frequencies_by_time.json')
-    frequencies_calculator.save_frequencies('frequencies.json')
+    frequenciesCalculator = FrequenciesCalculator()
+    
+    frequenciesCalculator.load_posts_from_directory(constants.NORMALIZED_DIRECTORY + '/twitter/')
+    #frequenciesCalculator.save_frequencies('/twitter_nouns.json')
+    frequenciesCalculator.save_frequencies_by_time('/twitter_by_time.json')
+    twitter_frequencies = frequenciesCalculator.term_frequencies
+
+    frequenciesCalculator.load_posts_from_directory(constants.NORMALIZED_DIRECTORY + '/mastodon/final/')
+    #frequenciesCalculator.save_frequencies('/mastodon_nouns.json')
+    frequenciesCalculator.save_frequencies_by_time('/mastodon_by_time.json')
+    twitter_frequencies = frequenciesCalculator.term_frequencies
