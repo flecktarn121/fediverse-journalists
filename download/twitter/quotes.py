@@ -1,14 +1,12 @@
 import constants
-import tweepy
-import logging
 from client import TwitterClient
 
-
-class ReplyClient(TwitterClient):
     
+class QuoteClient(TwitterClient):
+
     def get_raw_posts(self,user_id: str, next_token: str=None) -> dict:
         response = self.client.search_all_tweets(
-            query=f'to:{user_id}', 
+            query=f'twitter.com/{user_id}/ -from:{user_id}', 
             start_time=constants.START_DATE,
             max_results=constants.MAX_RESULTS,
             next_token=next_token,
