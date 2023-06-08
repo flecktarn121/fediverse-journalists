@@ -18,12 +18,18 @@ class TweetClient(TwitterClient):
     
     def get_raw_posts(self, user_id: str, next_token: str = None) -> dict:
         posts_ids = self.tweets_ids_by_user[user_id]
-        response = self.client.search_all_tweets(
-            query=f'to:{user_id}', 
-            start_time=constants.START_DATE,
-            max_results=constants.MAX_RESULTS,
-            next_token=next_token,
-            tweet_fields=['id', 'text', 'attachments', 'author_id', 'conversation_id', 'created_at', 'entities','public_metrics', 'withheld'],
-            user_fields=['id', 'name', 'username', 'created_at', 'description', 'entities', 'location', 'pinned_tweet_id', 'profile_image_url', 'protected', 'public_metrics', 'url', 'verified', 'withheld'])
+        #separate the list of ids into chunks of 100
+        posts_ids_by_100 = [posts_ids[i:i + 100] for i in range(0, len(posts_ids), 100)]
+        posts = []
+
+        for ids in posts_ids_by_100:
+            response = self.client.get_tweets(
+                ids=ids,
+                start_time=constants.START_DATE,
+                max_results=constants.MAX_RESULTS,
+                next_token=next_token,
+                tweet_fields=['id', 'text', 'attachments', 'author_id', 'conversation_id', 'created_at', 'entities','public_metrics', 'withheld'],
+                user_fields=['id', 'name', 'username', 'created_at', 'description', 'entities', 'location', 'pinned_tweet_id', 'profile_image_url', 'protected', 'public_metrics', 'url', 'verified', 'withheld'])
+            posts.extend(response['data'])
 
         return response
