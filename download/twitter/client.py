@@ -13,14 +13,14 @@ class TwitterClient:
         self.posts_retrieved = 0
         self.client: tweepy.Client = self.__get_client()
         
-    def retrieve_posts(self, ids: list) -> None:
+    def retrieve_posts(self, ids: list[str]) -> None:
         current_date = datetime.datetime.now()
-        logging.info(f'Fetching replies for journalists started at {current_date}...')
+        logging.info(f'Fetching posts started at {current_date}...')
 
-        for journalist_id in ids:
-            posts = self.__get_posts_for_id(journalist_id)
+        for id in ids:
+            posts = self.get_posts_for_id(id)
             self.posts_retrieved += len(posts)
-            self.__save_posts_to_file(posts, self.posts_retrieved)
+            self.__save_posts_to_file(posts)
             logging.info(f'A total of {self.posts_retrieved} tweets have been retrieved so far...')
 
             if(self.posts_retrieved > constants.MAX_POSTS):
@@ -30,8 +30,8 @@ class TwitterClient:
         current_date = datetime.datetime.now()
         logging.info(f'Fetching posts for user completed at {current_date}...')
     
-    def get_posts_for_id(self, id: str) -> list:
-        logging.info(f'Fetching replies for journalist {id}...')
+    def get_posts_for_id(self, id: str) -> list[dict]:
+        logging.info(f'Fetching replies for user {id}...')
 
         posts = [] 
         try:
@@ -42,7 +42,7 @@ class TwitterClient:
 
         while True:
             try:
-                posts = posts + response['data']
+                posts = posts + self.__process_response(response)
 
                 if ('next_token' in response['meta']):
                     response = self.get_raw_posts(id, response['meta']['next_token'])
@@ -50,15 +50,15 @@ class TwitterClient:
                 else:
                     break
             except tweepy.TweepyException as e:
-                logging.error(f'A tweepy error ocurred while fetching replies for journalist {id}: {e}')
+                logging.error(f'A tweepy error ocurred while fetching posts for user {id}: {e}')
                 break 
             except StopIteration as e:
                 break
             except Exception as e:
-                logging.error(f'An error ocurred while fetching replies for journalist {id}: {e}')
+                logging.error(f'An error ocurred while fetching posts for user {id}: {e}')
                 break
 
-        logging.info(f'Successfuly fetched {len(posts)} replies for journalist {id}')
+        logging.info(f'Successfuly fetched {len(posts)} posts for user {id}')
         
         return posts
 
@@ -73,7 +73,7 @@ class TwitterClient:
 
         return response
 
-    def __get_client() -> tweepy.Client:
+    def __get_client(self) -> tweepy.Client:
         client = tweepy.Client(
             bearer_token=credentials.BEARER_TOKEN, 
             consumer_key=credentials.CONSUMER_KEY,
@@ -85,10 +85,22 @@ class TwitterClient:
         
         return client
 
-    def __save_posts_to_file(self, replies: list) -> None:
-        filename = f'replies_{self.file_counter}.json'
+    def __save_posts_to_file(self, posts: list) -> None:
+        filename = f'{constants.FILE_PREFIX}{self.file_counter}.json'
         with open(f'{constants.DESTINATION_DIRERCTORY}{filename}', 'w') as f:
-            json.dump(replies, f)
+            json.dump(posts, f)
         
         self.file_counter += 1
+    
+    def __process_response(self, response: dict) -> list[dict]:
+        posts = []
+        if ('data' in response):
+            posts = response['data']
+        
+        if ('includes' in response and 'users' in response['includes']):
+            users = response['includes']['users']
+            for post in posts:
+                post['author'] = next((user for user in users if user['id'] == post['author_id']), '')
+        
+        return posts
     
