@@ -9,7 +9,7 @@ class QuoteClient(TwitterClient):
             query=f'twitter.com/{user_id}/ -from:{user_id} is:quote', 
             start_time=constants.START_DATE,
             end_time=constants.END_DATE,
-            max_results=10,
+            max_results=constants.MAX_RESULTS,
             next_token=next_token,
             tweet_fields=['id', 'text', 'attachments', 'author_id', 'conversation_id', 'created_at', 'entities','public_metrics', 'withheld'],
             expansions=['author_id'],
