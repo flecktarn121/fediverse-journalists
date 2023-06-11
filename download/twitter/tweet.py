@@ -1,11 +1,10 @@
 import constants
-import json
 from client import TwitterClient
 
 
 class TweetClient(TwitterClient):
 
-    def get_raw_posts(self,user_id: str, next_token: str=None) -> dict:
+    def get_raw_posts(self,user_id: str, next_token: str|None=None) -> dict:
         response = self.client.search_all_tweets(
             query=f'from:{user_id} -is:retweet', 
             start_time=constants.START_DATE,

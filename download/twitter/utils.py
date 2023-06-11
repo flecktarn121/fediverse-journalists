@@ -1,18 +1,20 @@
 import os
 import json
 import ijson
+import constants
+from typing import TextIO
 
 
-def main():
-    posts_ids_by_user = {}
-    for filename in os.listdir('download/twitter/data/raw'):
+def main() -> dict[str, list[str]]:
+    posts_ids_by_user: dict[str, list[str]] = {}
+    for filename in os.listdir(constants.DATA_DIRERCTORY):
         if filename.endswith('.json'):
-            with open(f'download/twitter/data/raw/{filename}', 'r') as f:
+            with open(f'{constants.DATA_DIRERCTORY}{filename}', 'r') as f:
                 processFile(posts_ids_by_user, f)
     
     return posts_ids_by_user
 
-def processFile(posts_ids_by_user, f):
+def processFile(posts_ids_by_user: dict[str, list[str]], f: TextIO ) -> None:
         tweets = ijson.items(f, 'item')
         for tweet in tweets:
             if 'conversation_id' in tweet:
@@ -22,5 +24,5 @@ def processFile(posts_ids_by_user, f):
 
 if __name__ == '__main__':
     posts_ids_by_user = main()
-    with open('download/twitter/data/tweets_ids_by_user.json', 'w') as f:
+    with open(f'{constants.DATA_DIRERCTORY}tweets_ids_by_user.json', 'w') as f:
         json.dump(posts_ids_by_user, f)

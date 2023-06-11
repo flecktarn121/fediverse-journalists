@@ -33,7 +33,7 @@ class TwitterClient:
     def get_posts_for_id(self, id: str) -> list[dict]:
         logging.info(f'Fetching replies for user {id}...')
 
-        posts = [] 
+        posts: list[dict] = [] 
         try:
             response = self.get_raw_posts(id)
         except Exception as e:
@@ -62,7 +62,7 @@ class TwitterClient:
         
         return posts
 
-    def get_raw_posts(self,user_id: str, next_token: str=None) -> dict:
+    def get_raw_posts(self,user_id: str, next_token: str|None=None) -> dict:
         response = self.client.search_all_tweets(
             query=f'to:{user_id}', 
             start_time=constants.START_DATE,

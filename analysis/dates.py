@@ -18,7 +18,6 @@ def main():
     
     print(f'Fecha del último tweet: {end_date}')
 
-    return
     file_counter = 0
     file_counter = process_mastodon_directory('data/normalized/mastodon', file_counter, end_date)
     file_counter = process_mastodon_directory('data/normalized/mastodon/alien', file_counter, end_date)

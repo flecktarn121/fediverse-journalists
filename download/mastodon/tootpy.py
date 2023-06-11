@@ -1,7 +1,11 @@
-import mastodon
+from typing import Any
+import random
+import constants
+import credentials
 import logging
 import os
 import json
+from mastodon import Mastodon # type: ignore
 from datetime import datetime, timezone
 
 
@@ -11,8 +15,17 @@ class MastodonClient:
         self.total_toots_fetched = 0
         self.file_counter = 0
 
-    def  get_posts(self, user_ids: list[str]) -> None:
-        for id in user_ids:
+        random_indentifier = random.randint(0, 1000000)
+        self.file_prefix = f'masto_{random_indentifier}_'
+
+        log_file_name = f'{constants.LOGS_DIRECTORY}/masto_{random_indentifier}.log'
+        logging.basicConfig(
+            filename=log_file_name, 
+            level=logging.INFO)
+
+
+    def  get_posts(self, ids: list[str]) -> None:
+        for id in ids:
             try:
                 self.process_user(id)
             except Exception as e:
@@ -21,7 +34,7 @@ class MastodonClient:
     def process_user(self, id: str) -> None:
         pass
 
-    def get_toots_for_account(user_id: str, client: mastodon.Mastodon) -> list[dict]:
+    def get_toots_for_account(self, user_id: str, client: Mastodon) -> list[dict]:
         account = client.account_lookup(user_id)
 
         logging.info(f'Fetching toots of {account["username"]}...')
@@ -50,24 +63,25 @@ class MastodonClient:
             if len(fetched_statuses) != len(filtered_statuses):
                 break
 
-        logging.info(f'Fetched {len(statuses)} toots of {account["username"]}.')
+        logging.info(f'Fetched {len(statuses)} posts of {account["username"]}.')
         return statuses
 
-    def save_posts_to_file(self, replies: list[dict]) -> None:
-        file_name = os.path.join('mastodon/data', f'{self.file_counter}.json')
+    def save_posts_to_file(self, replies: list[dict[str, Any]]) -> None:
+        file_name = os.path.join(constants.DATA_DIRECTORY, f'{self.file_prefix}{self.file_counter}.json')
 
-        with open(f'mastodon/data/{file_name}', 'w') as f:
+        with open(file_name, 'w') as f:
             json.dump(replies, f, default=str)
 
     def parse_domain(self, acct: str) -> str:
         return acct.split('@')[-1]
 
-    def get_api_instance(self, base_url:str=None) -> mastodon.Mastodon:
+    def get_api_instance(self, base_url:str|None=None) -> Mastodon:
         if base_url is None:
-            return mastodon.Mastodon(
+            return Mastodon(
                 client_id=credentials.APP_ID,
                 client_secret=credentials.SECRET,
                 access_token=credentials.ACCESS_TOKEN,
-                api_base_url='https://mastodon.social')
+                api_base_url='https://mastodon.social',
+                )
         else:
-            return mastodon.Mastodon(api_base_url=base_url)
+            return Mastodon(api_base_url=base_url)

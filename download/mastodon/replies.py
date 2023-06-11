@@ -1,7 +1,8 @@
 import logging
-import mastodon
+import mastodon # type: ignore
+from typing import Any
 from tootpy import MastodonClient
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 class RepliesClient(MastodonClient):
@@ -17,9 +18,9 @@ class RepliesClient(MastodonClient):
         logging.info(f'A total of {self.total_toots_fetched} toots have been retrieved so far...')
         self.save_posts_to_file(replies)
 
-    def get_replies_for_user(self, user_id: str, client):
+    def get_replies_for_user(self, user_id: str, client: mastodon.Mastodon) -> list[dict[str, Any]]:
         logging.info(f'Fetching replies for {user_id}...')
-        replies = []
+        replies: list[dict[str, Any]] = []
         domain = self.parse_domain(user_id)
         client = self.get_api_instance(base_url=f'https://{domain}')
 
@@ -34,7 +35,7 @@ class RepliesClient(MastodonClient):
         logging.info(f'Fetched {len(replies)} replies for journalist {user_id}.')
         return replies
 
-    def get_replies_for_toots(toots: list[dict], client: mastodon.Mastodon) -> list[dict]:
+    def get_replies_for_toots(self, toots: list[dict], client: mastodon.Mastodon) -> list[dict]:
         replies = []
         replies_ids = []
         processed_toots = 0

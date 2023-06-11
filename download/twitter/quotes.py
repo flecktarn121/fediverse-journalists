@@ -4,7 +4,7 @@ from client import TwitterClient
     
 class QuoteClient(TwitterClient):
 
-    def get_raw_posts(self,user_id: str, next_token: str=None) -> dict:
+    def get_raw_posts(self,user_id: str, next_token: str|None=None) -> dict:
         response = self.client.search_all_tweets(
             query=f'twitter.com/{user_id}/ -from:{user_id} is:quote', 
             start_time=constants.START_DATE,

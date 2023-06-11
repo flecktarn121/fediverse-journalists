@@ -3,7 +3,7 @@ import logging
 import constants
 from quotes import QuoteClient 
 
-def load_journalists_from_file(file_path):
+def load_journalists_from_file(file_path: str) -> list[str]:
     journalists_ids = []
     
     with open(file_path, 'r') as f:
@@ -13,13 +13,13 @@ def load_journalists_from_file(file_path):
     
     return journalists_ids
 
-def main():
+def main() -> None:
     logging.basicConfig(
-        filename='download/twitter/logs/info.log',
+        filename=f'{constants.LOGS_DIRERCTORY}info.log',
         level=logging.INFO, 
         encoding='utf-8')
     
-    journalists_ids = load_journalists_from_file(f'download/twitter/data/journalists.csv')
+    journalists_ids = load_journalists_from_file(f'{constants.DATA_DIRERCTORY}journalists.csv')
     client = QuoteClient()
     client.retrieve_posts(journalists_ids)
 
