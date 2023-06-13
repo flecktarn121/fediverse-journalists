@@ -8,20 +8,24 @@ import constants
 
 class TwitterClient:
 
-    def __init__(self) -> None:
-        self.file_counter: int = 0
-        self.posts_retrieved = 0
+    def __init__(self, file_counter=0, posts_retrieved=0) -> None:
+        self.file_counter = file_counter
+        self.posts_retrieved = posts_retrieved
         self.client: tweepy.Client = self.__get_client()
         
     def retrieve_posts(self, ids: list[str]) -> None:
         current_date = datetime.datetime.now()
+        counter = 0
         logging.info(f'Fetching posts started at {current_date}...')
 
         for id in ids:
             posts = self.get_posts_for_id(id)
             self.posts_retrieved += len(posts)
             self.__save_posts_to_file(posts)
+            counter += 1
+
             logging.info(f'A total of {self.posts_retrieved} tweets have been retrieved so far...')
+            logging.info(f'{counter}/{len(ids)} ids have been processed so far...')
 
             if(self.posts_retrieved > constants.MAX_POSTS):
                 logging.warn(f'{constants.MAX_POSTS} tweets have been retrieved. Stopping...')

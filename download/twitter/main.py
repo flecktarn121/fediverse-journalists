@@ -9,11 +9,17 @@ def load_journalists_from_file(file_path: str) -> list[str]:
     with open(file_path, 'r') as f:
         for row in csv.DictReader(f):
             journalists_ids.append(row['twitter'])
-            break
     
     return journalists_ids
 
 def main() -> None:
+
+    print('Have you set all the parameters? (y/n)')
+    answer = input()
+    if answer.lower() != 'y':
+        print('Please set the parameters and try again.')
+        exit()
+
     logging.basicConfig(
         filename=f'{constants.LOGS_DIRERCTORY}info.log',
         level=logging.INFO, 
