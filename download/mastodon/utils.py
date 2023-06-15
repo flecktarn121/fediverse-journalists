@@ -24,17 +24,16 @@ def processFile(posts_instances: dict[str, str], f: TextIO ) -> None:
             if parse(status['created_at']) > end_date:
                 continue
 
-            domain = urlparse(status['url']).hostname
             if status['in_reply_to_id'] is None:
                 continue
             if status['in_reply_to_id'] not in posts_instances:
-                posts_instances[status['in_reply_to_id']] = domain
+                posts_instances[status['in_reply_to_id']] = status['in_reply_to_account_id']
 
 
 if __name__ == '__main__':
     posts_instances = main()
-    with open(f'{constants.DATA_DIRECTORY}/posts_instances.csv', 'w', newline='') as f:
+    with open(f'{constants.DATA_DIRECTORY}/posts_accounts.csv', 'w', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(['id', 'domain'])
+        writer.writerow(['id', 'account'])
         for key, value in posts_instances.items():
             writer.writerow([key, value])

@@ -9,12 +9,16 @@ class TootsClient(MastodonClient):
 
     def __init__(self) -> None:
         super().__init__()
-        self.toots_ids_by_instance = self.__load_toots_ids()
+
+        #the accounts to which each post belongs
+        self.posts_ids_to_accounts_ids = self.__load_dictionary('posts_accounts', 'id', 'domain')
+        #the usernames of the previous accounts
+        self.accounts_ids_to_usernames= self.__load_dictionary('accounts_ids_usernames', 'id', 'username')
     
-    def __load_toots_ids(self) -> dict[str, str]:
-        with open(f'{constants.DATA_DIRECTORY}/posts_instances.csv', 'r') as f:
+    def __load_dictionary(self, filename: str, keyname: str, valuename:str) -> dict[str, str]:
+        with open(f'{constants.DATA_DIRECTORY}/{filename}', 'r') as f:
             reader = csv.DictReader(f)
-            return {row['id']: row['domain'] for row in reader}
+            return {row[keyname]: row[valuename] for row in reader}
     
     def get_posts(self, ids: list[str]) -> None:
         posts: list[dict[str, Any]] = []
@@ -33,8 +37,16 @@ class TootsClient(MastodonClient):
         self.save_posts_to_file(posts)
     
     def __get_post(self, id: str) -> dict[str, Any]:
-        domain = self.toots_ids_by_instance[id]
+        domain = self.__get_domain(id)
         client = self.get_api_instance(domain)
         post = client.status(id)
 
         return post
+    
+    def __get_domain(self, id: str) -> str:
+        try:
+            account_id = self.posts_ids_to_accounts_ids[id]
+            username = self.accounts_ids_to_usernames[account_id]
+            return self.parse_domain(username)
+        except KeyError:
+            raise Exception(f'No account info for post {id}')
