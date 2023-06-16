@@ -6,27 +6,25 @@ from multiprocessing import Pool, cpu_count
 from users import UsersClient
 
 def read_ids_by_instance() -> dict[str, set[str]]:
-    counter = 0
-    post_ids_by_instance: dict[str, set[str]] = {}
-    with open(f'{constants.DATA_DIRECTORY}/posts_accounts.csv', 'r') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if counter == 20: break
-            if row['domain'] not in post_ids_by_instance:
-                post_ids_by_instance[row['domain']] = set()
-            post_ids_by_instance[row['domain']].add(row['id']) 
+    users_by_instnace: dict[str, set[str]] = {}
+    with open(f'{constants.DATA_DIRECTORY}/journalists.csv', 'r') as f:
+        try:
+            process_rows(users_by_instnace, f)
+        except Exception as e:
+            pass
 
-    return post_ids_by_instance
+    return users_by_instnace
 
-def process_row(journalists_by_domain: dict, f: Any) -> None:
-    reader = csv.reader(f)
+def process_rows(users_by_instance: dict[str, set[str]], f: Any) -> None:
+    reader = csv.DictReader(f)
     for row in reader:
-        user = row[2]
+        user = row['mastodon']
         domain = get_domain_from_username(user)
-        if domain in journalists_by_domain:
-            journalists_by_domain[domain].append(row[2])
+        if domain in users_by_instance:
+            users_by_instance[domain].add(user)
         else:
-            journalists_by_domain[domain] = [row[2]]
+            users_by_instance[domain] = set([user])
+        break
 
 def get_domain_from_username(username: str) -> str:
     return username.split('@')[-1]

@@ -7,6 +7,7 @@ import os
 import json
 from mastodon import Mastodon # type: ignore
 from datetime import datetime, timezone
+from dateutil.parser import parse
 
 
 class MastodonClient:
@@ -38,7 +39,7 @@ class MastodonClient:
         account = client.account_lookup(user_id)
 
         logging.info(f'Fetching toots of {account["username"]}...')
-        begin_date = datetime(2022, 10, 26, tzinfo=timezone.utc)
+        begin_date = parse(constants.START_DATE)
         statuses = []
 
         fetched_statuses = client.account_statuses(account, exclude_reblogs=True, limit=40)
