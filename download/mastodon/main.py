@@ -24,7 +24,6 @@ def process_rows(users_by_instance: dict[str, set[str]], f: Any) -> None:
             users_by_instance[domain].add(user)
         else:
             users_by_instance[domain] = set([user])
-        break
 
 def get_domain_from_username(username: str) -> str:
     return username.split('@')[-1]

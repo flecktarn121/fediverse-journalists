@@ -1,6 +1,7 @@
 import constants
 import logging
-import csv
+import json
+import os
 from typing import Any
 from tootpy import MastodonClient
 from dateutil.parser import parse
@@ -33,3 +34,9 @@ class TootsClient(MastodonClient):
             logging.error(f'Error fetching posts of {id}: {e}')
 
         return posts
+    
+    def save_posts_to_file(self, replies: list[dict[str, Any]]) -> None:
+        file_name = os.path.join(constants.DATA_DIRECTORY + '/toots', f'{self.file_prefix}{self.file_counter}.json')
+
+        with open(file_name, 'w') as f:
+            json.dump(replies, f, default=str)

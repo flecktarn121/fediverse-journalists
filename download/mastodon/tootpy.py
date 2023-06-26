@@ -68,7 +68,7 @@ class MastodonClient:
         return statuses
 
     def save_posts_to_file(self, replies: list[dict[str, Any]]) -> None:
-        file_name = os.path.join(constants.DATA_DIRECTORY, f'{self.file_prefix}{self.file_counter}.json')
+        file_name = os.path.join(constants.DATA_DIRECTORY + '/raw', f'{self.file_prefix}{self.file_counter}.json')
 
         with open(file_name, 'w') as f:
             json.dump(replies, f, default=str)
