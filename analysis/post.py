@@ -14,11 +14,11 @@ class Post:
         self.uri = uri
         self.text = text
         self.verbatim_text = text
-        self.tokenized_text = []
-        self.entities = []
-        self.urls = set()
-        self.mentions = set()
-        self.hashtags = set()
+        self.tokenized_text:list = []
+        self.entities:list = []
+        self.urls: set = set()
+        self.mentions: set = set()
+        self.hashtags: set = set()
 
     def to_dict(self) -> dict:
         return {
@@ -39,7 +39,7 @@ class Post:
     @classmethod
     def __get_html2text(cls) -> html2text.HTML2Text:
         processor = html2text.HTML2Text()
-        processor.ignore_links = True # prevent noise in hastags and mentions links
+        processor.ignore_links = True # prevent noise in hastags' and mentions' links
         processor.body_width = 0 # No random line breaks
 
         return processor

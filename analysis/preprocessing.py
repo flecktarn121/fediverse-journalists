@@ -3,10 +3,11 @@ import logging
 import json
 import csv
 import constants
+import re
 from post import Post
 from nel import NamedEntityLinker
 from spacy.tokens import Token
-from spacy_langdetect import LanguageDetector
+from spacy_langdetect import LanguageDetector # type: ignore
 from spacy.language import Language
 
 
@@ -35,13 +36,15 @@ class PreProcessor:
         self.__save_posts_to_file(posts, f'{constants.PREPROCESSED_DIRECTORY}/{self.posts_source}/preprocessed_')
     
     def __process_post(self, post: Post) -> Post|None:
+        self.__check_language_pipe()
         doc = self.nlp(post.text)
-        self.__check_language_pipe(doc)
+
         if not doc._.language['language'] == 'en':
             return None
 
-        for token in doc:
-            self.__process_token(token, post)
+        tokenized_text = [self.__process_token(token, post) for token in doc]
+        post.tokenized_text = [token for token in tokenized_text if token != '']
+        post.text = ' '.join(post.tokenized_text)
         
         return post
 
@@ -58,14 +61,19 @@ class PreProcessor:
             post.mentions.add(token.text)
             return ''
 
-        if token.is_emoji:
-            return token.emoji_desc
+        if token._.is_emoji:
+            return token._.emoji_desc
+        
+        if token.text in self.emoticons:
+            return self.emoticons[token.text]
         
         if token.text.lower() in self.misspellings:
             return self.misspellings[token.text.lower()]
 
+        #check whether some letter is repeated more than 4 times, if so, reduce it to 2
+        text = re.sub(r'([a-zA-Z])\1{4,}', r'\1\1', token.text)
           
-        return token.text
+        return text
   
     def normalize_posts(self, posts):
         logging.info('Normalizing posts...')
@@ -111,18 +119,18 @@ class PreProcessor:
         with open(constants.MISSPELLINGS_FILE, 'r') as f:
             for row in f:
                 # last element is the correct spelling
-                misspellings.update({misspelling: row.split('|')[-1] for misspelling in row.split('|')[:-1]})
+                misspellings.update({misspelling.strip(): row.split('|')[-1].strip() for misspelling in row.split('|')[:-1]})
         return misspellings
 
     def __load_emoticons(self) -> dict[str, str]:
         emoticons = {}
         with open(constants.EMOTICONS_FILE, 'r') as f:
-            reader = csv.DictReader(f)
+            reader = csv.DictReader(f, delimiter='\t')
             emoticons.update({row['emoticon']: row['description'] for row in reader})
         return emoticons
 
 
-    def __is_word(self, token: str) -> bool:
+    def __is_word(self, token: Token) -> bool:
         is_word = True
         
         is_word &= not token.is_stop
