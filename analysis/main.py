@@ -1,21 +1,19 @@
 import os
 import ijson #type: ignore
 import constants
-from preprocessing import PreProcessor
-from nel import NamedEntityLinker
+from normalizing.preprocessing import PreProcessor
+from normalizing.nel import NamedEntityLinker
 from post import Post
 import logging
 
 
 def load_twitter_posts(preprocessor : PreProcessor) -> None:
-    #iterate all the json files in data folder and load the posts in each of of them
     for file in os.listdir(constants.RAW_DIRECTORY_TWITTER):
         with open(os.path.join(constants.RAW_DIRECTORY_TWITTER, file), 'r') as f:
             logging.info(f'Loading file {file}')
             posts = ijson.items(f, 'item')
             posts = [Post.load_twitter_post(post) for post in posts]
             preprocessor.preprocess_posts(posts)
-        break
 
 def load_mastodon_posts(preprocessor: PreProcessor) -> None:
     for file in os.listdir(constants.RAW_DIRECTORY_MASTODON):
@@ -25,19 +23,18 @@ def load_mastodon_posts(preprocessor: PreProcessor) -> None:
 
             posts = [Post.load_mastodon_post(post) for post in posts]
             preprocessor.preprocess_posts(posts)
-        break
 
 def preprocess() -> None:
-    logging.basicConfig(level=logging.INFO, filename='processing.log')
+    logging.basicConfig(level=logging.INFO, filename=f'{constants.LOGGING_DIRECTORY}/preprocessing.log')
 
     preprocessor = PreProcessor()
     try:
         preprocessor.posts_source = 'twitter'
         logging.info('Loading twitter posts')
         load_twitter_posts(preprocessor)
-        preprocessor.posts_source = 'mastodon'
-        logging.info('Loading mastodon posts')
-        load_mastodon_posts(preprocessor)
+        #preprocessor.posts_source = 'mastodon'
+        #logging.info('Loading mastodon posts')
+        #load_mastodon_posts(preprocessor)
         logging.info('Saving entities')
         preprocessor.linker.save_entities_to_file()
     except Exception as e:

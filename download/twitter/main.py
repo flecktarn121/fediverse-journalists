@@ -1,16 +1,13 @@
 import csv
 import logging
 import constants
-from quotes import QuoteClient 
+from tweet import TweetClient
 
 def load_journalists_from_file(file_path: str) -> list[str]:
     journalists_ids = []
     
     with open(file_path, 'r') as f:
         for row in csv.DictReader(f):
-            if int(row['index']) < 960:
-                continue
-            
             journalists_ids.append(row['twitter'])
     
     return journalists_ids
@@ -29,7 +26,7 @@ def main() -> None:
         encoding='utf-8')
     
     journalists_ids = load_journalists_from_file(f'{constants.DATA_DIRERCTORY}journalists.csv')
-    client = QuoteClient(posts_retrieved=1_677_685, file_counter=954)
+    client = TweetClient(posts_retrieved=1_901_753)
     client.retrieve_posts(journalists_ids)
 
 if __name__ == '__main__':

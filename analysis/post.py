@@ -1,11 +1,12 @@
 from __future__ import annotations
 import html2text
 from dateutil.parser import parse
+from urllib.parse import urlparse
 
 
 class Post:
 
-    def __init__(self, id, timestamp, handle, user_id, user_bio, uri, text) -> None:
+    def __init__(self, id, timestamp, handle, user_id, user_bio, uri, text, in_response_to_uri='') -> None:
         self.id = id
         self.timestamp = timestamp
         self.handle = handle
@@ -19,6 +20,7 @@ class Post:
         self.urls: set = set()
         self.mentions: set = set()
         self.hashtags: set = set()
+        self.in_response_to_uri = in_response_to_uri
 
     def to_dict(self) -> dict:
         return {
@@ -30,10 +32,12 @@ class Post:
             'uri': self.uri,
             'text': self.text,
             'verbatim_text': self.verbatim_text,
+            'tokenized_text': list(self.tokenized_text),
             'entities': list(self.entities),
             'urls': list(self.urls),
             'mentions': list(self.mentions),
-            'hashtags': list(self.hashtags)
+            'hashtags': list(self.hashtags),
+            'in_response_to_uri': self.in_response_to_uri
         }
 
     @classmethod
@@ -56,7 +60,15 @@ class Post:
         uri = f'https://twitter.com/twitter/status/{id}'
         text = processor.handle(twitter_post['text']).strip()
 
-        return cls(id, timestamp, handle, user_id, user_bio, uri, text)
+        conversation_id = twitter_post['conversation_id']
+        if conversation_id != id:
+            in_response_to_uri =f'https://twitter.com/twitter/status/{conversation_id}' 
+        else:
+            #get the first url that contains a twitter domain, as it should be the quoted tweet
+            urls = [url['expanded_url'] for url in twitter_post['entities']['urls'] if url['expanded_url'].startswith('https://twitter.com/')] if 'urls' in twitter_post['entities'] else []
+            in_response_to_uri = urls[0] if len(urls) > 0 else ''
+
+        return cls(id, timestamp, handle, user_id, user_bio, uri, text, in_response_to_uri)
 
     @classmethod
     def load_mastodon_post(cls, mastodon_post: dict) -> Post:
@@ -70,7 +82,10 @@ class Post:
         uri = mastodon_post['uri']
         text = processor.handle(mastodon_post['content']).strip()
 
-        return cls(id, timestamp, handle, user_id, user_bio, uri, text)
+        domain = urlparse(uri).netloc
+        in_response_to_uri = f'{domain}/statuses/{mastodon_post["in_reply_to_id"]}' if mastodon_post['in_reply_to_id'] else ''
+
+        return cls(id, timestamp, handle, user_id, user_bio, uri, text, in_response_to_uri)
     
     @classmethod
     def load_from_json(cls, json_post: dict) -> Post:
@@ -87,8 +102,9 @@ class Post:
             urls = json_post['urls']
             mentions = json_post['mentions']
             hashtags = json_post['hashtags']
+            in_response_to_uri = json_post['in_response_to_uri']
 
-            post = cls(id, timestamp, handle, user_id, user_bio, uri, text)
+            post = cls(id, timestamp, handle, user_id, user_bio, uri, text, in_response_to_uri)
             post.verbatim_text = verbatim_text
             post.entities = entities
             post.urls = set(urls)

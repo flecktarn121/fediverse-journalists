@@ -5,4 +5,4 @@ DATA_DIRERCTORY='download/twitter/data/'
 DESTINATION_DIRERCTORY=f'{DATA_DIRERCTORY}raw/'
 LOGS_DIRERCTORY='download/twitter/logs/'
 MAX_POSTS=6500000
-FILE_PREFIX='quotes_'
+FILE_PREFIX='tweets_'
