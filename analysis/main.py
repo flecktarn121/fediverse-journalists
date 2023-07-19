@@ -9,6 +9,8 @@ import logging
 
 def load_twitter_posts(preprocessor : PreProcessor) -> None:
     for file in os.listdir(constants.RAW_DIRECTORY_TWITTER):
+        if not file.endswith('.json'):
+            continue
         with open(os.path.join(constants.RAW_DIRECTORY_TWITTER, file), 'r') as f:
             logging.info(f'Loading file {file}')
             posts = ijson.items(f, 'item')
@@ -17,10 +19,11 @@ def load_twitter_posts(preprocessor : PreProcessor) -> None:
 
 def load_mastodon_posts(preprocessor: PreProcessor) -> None:
     for file in os.listdir(constants.RAW_DIRECTORY_MASTODON):
+        if not file.endswith('.json'):
+            continue
         with open(os.path.join(constants.RAW_DIRECTORY_MASTODON, file), 'r') as f:
             logging.info(f'Loading file {file}')
             posts = ijson.items(f, 'item')
-
             posts = [Post.load_mastodon_post(post) for post in posts]
             preprocessor.preprocess_posts(posts)
 
@@ -29,12 +32,12 @@ def preprocess() -> None:
 
     preprocessor = PreProcessor()
     try:
-        preprocessor.posts_source = 'twitter'
-        logging.info('Loading twitter posts')
-        load_twitter_posts(preprocessor)
-        #preprocessor.posts_source = 'mastodon'
-        #logging.info('Loading mastodon posts')
-        #load_mastodon_posts(preprocessor)
+        #preprocessor.posts_source = 'twitter'
+        #logging.info('Loading twitter posts')
+        #load_twitter_posts(preprocessor)
+        preprocessor.posts_source = 'mastodon'
+        logging.info('Loading mastodon posts')
+        load_mastodon_posts(preprocessor)
         logging.info('Saving entities')
         preprocessor.linker.save_entities_to_file()
     except Exception as e:

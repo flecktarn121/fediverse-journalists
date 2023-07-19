@@ -4,6 +4,7 @@ import json
 import csv
 import constants
 import re
+from dateutil.parser import parse
 from post import Post
 from normalizing.nel import NamedEntityLinker
 from spacy.tokens import Token
@@ -39,13 +40,17 @@ class PreProcessor:
     
     def __process_post(self, post: Post) -> Post|None:
         self.__check_language_pipe()
+        if not self.__is_post_within_date_range(post):
+            return None
+
         doc = self.nlp(post.text)
 
         if not doc._.language['language'] == 'en':
             return None
 
         tokenized_text = [self.__process_token(token, post) for token in doc]
-        post.tokenized_text = [token for token in tokenized_text if token != '']
+        post.tokenized_text = [token for token in tokenized_text if token != '' and token != None]
+
         post.text = ' '.join(post.tokenized_text)
         
         return post
@@ -99,6 +104,12 @@ class PreProcessor:
         if not self.nlp.has_pipe("language_detector"):
             Language.factory("language_detector", func=self.create_lang_detector)
             self.nlp.add_pipe('language_detector', last=True)
+    
+    def __is_post_within_date_range(self, post: Post) -> bool:
+        start = parse(constants.START_DATE)
+        end = parse(constants.END_DATE)
+
+        return start <= post.timestamp <= end
 
     def __lematize_posts(self, tokenized_posts):
         lemmatized_text = []

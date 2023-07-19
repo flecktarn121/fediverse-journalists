@@ -65,7 +65,7 @@ class Post:
             in_response_to_uri =f'https://twitter.com/twitter/status/{conversation_id}' 
         else:
             #get the first url that contains a twitter domain, as it should be the quoted tweet
-            urls = [url['expanded_url'] for url in twitter_post['entities']['urls'] if url['expanded_url'].startswith('https://twitter.com/')] if 'urls' in twitter_post['entities'] else []
+            urls = [url['expanded_url'] for url in twitter_post['entities']['urls'] if url['expanded_url'].startswith('https://twitter.com/')] if 'entities' in twitter_post and 'urls' in twitter_post['entities'] else []
             in_response_to_uri = urls[0] if len(urls) > 0 else ''
 
         return cls(id, timestamp, handle, user_id, user_bio, uri, text, in_response_to_uri)
@@ -75,7 +75,7 @@ class Post:
         processor = cls.__get_html2text()
         
         id = mastodon_post['account']['id']
-        timestamp = mastodon_post['created_at']
+        timestamp = parse(mastodon_post['created_at'])
         handle = mastodon_post['account']['acct']
         user_id = mastodon_post['account']['id']
         user_bio = processor.handle(mastodon_post['account']['note'] if 'note' in mastodon_post['account'] else '').strip()
