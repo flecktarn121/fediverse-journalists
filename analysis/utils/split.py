@@ -3,10 +3,11 @@ import ijson
 import json
 
 def split():
-    filenames = os.listdir('data/raw/mastodon')
+    directory = 'analysis/data/raw/mastodon/raw'
+    filenames = os.listdir(directory)
     for filename in filenames:
         if filename.endswith('.json'):
-            with open(f'data/raw/mastodon/{filename}', 'r') as f:
+            with open(f'{directory}/{filename}', 'r') as f:
                 counter = 0
                 filename_counter = 0
                 posts = []
@@ -14,12 +15,12 @@ def split():
                     posts.append(post)
                     counter += 1
                     if counter == 1000:
-                        with open(f'data/split/mastodon/{filename}{filename_counter}.json', 'w') as outfile:
+                        with open(f'analysis/data/raw/mastodon/{filename}{filename_counter}.json', 'w') as outfile:
                             json.dump(posts, outfile, indent=4, default=str)
                         counter = 0
                         posts = []
                         filename_counter += 1
-                with open(f'data/split/mastodon/{filename}{filename_counter}.json', 'w') as outfile:
+                with open(f'analysis/data/raw/mastodon/{filename}{filename_counter}.json', 'w') as outfile:
                     json.dump(posts, outfile, indent=4, default=str)
 
 
