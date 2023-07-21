@@ -33,8 +33,8 @@ class PreProcessor:
         posts = [self.__process_post(post) for post in posts]
         posts = [post for post in posts if post is not None]
 
-        logging.info('Enlazando entidades de los posts...')
-        self.linker.link([''.join(post.text).lower() for post in posts])
+        #logging.info('Enlazando entidades de los posts...')
+        #self.linker.link([''.join(post.text).lower() for post in posts])
 
         self.__save_posts_to_file(posts, f'{constants.PREPROCESSED_DIRECTORY}/{self.posts_source}/preprocessed_')
     
@@ -130,9 +130,7 @@ class PreProcessor:
     def __load_misspellings(self) -> dict[str, str]:
         misspellings = {}
         with open(constants.MISSPELLINGS_FILE, 'r') as f:
-            for row in f:
-                # last element is the correct spelling
-                misspellings.update({misspelling.strip(): row.split('|')[1].strip() for misspelling in row.split('|')[:-1]})
+            misspellings = {row.split('|')[0].strip(): row.split('|')[1].strip() for row in f}
         return misspellings
 
     def __load_emoticons(self) -> dict[str, str]:
