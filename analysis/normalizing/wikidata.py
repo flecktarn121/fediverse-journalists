@@ -1,20 +1,25 @@
+import logging
 import csv
-import constants
 import time
 import requests
 import json
 import logging
 from urllib.parse import quote
+import sys
+sys.path.append('analysis')
+import constants
 from entity import Entity
 
-def get_entity_name(entity):
-    print(f'Getting label for {entity.name}')
+def get_entity_name(entity: Entity):
+    logging.info(f'Getting label for {entity.name}')
     data = __query_wikidata(constants.WIKIDATA_GET_API, entity.main_match)
     if data is not None and 'entities' in data:
         wikidata_entity = data['entities'][entity.main_match]
         if 'en' in wikidata_entity['labels']:
             entity.label = wikidata_entity['labels']['en']['value']
-            print(f'Label is {entity.label}')
+            entity.description = wikidata_entity['descriptions']['en']['value'] if 'en' in wikidata_entity['descriptions'] and wikidata_entity['descriptions']['en'] else ''
+            logging.info(f'Label is {entity.label}')
+            time.sleep(4) 
 
 
 def __query_wikidata(url, parameter):
@@ -28,12 +33,13 @@ def __query_wikidata(url, parameter):
     time.sleep(2) 
     return data
 
-def load_entities_from_csv():
+def load_entities_from_csv() -> list[Entity]:
     entites = []
-    with open('analysis/data/entities/entities1_filtered.csv', 'r', encoding='utf-8') as csvfile:
+    with open('analysis/data/entities/entities.csv', 'r', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             entity = Entity(row['name'])
+            entity.label = row['label']
             entity.frequency = int(row['frequency'])
             entity.main_match = row['main_match']
             entity.description = row['description']
@@ -42,8 +48,8 @@ def load_entities_from_csv():
     
     return entites
 
-def save_entities_to_file(entities):
-    print('Saving entities to file')
+def save_entities_to_file(entities: list[Entity]) -> None:
+    logging.info('Saving entities to file')
     with open('analysis/data/entities/labelled_entities.csv', 'w', encoding='utf-8', newline='') as csvfile:
         fieldnames = ['name', 'frequency', 'main_match','label', 'description', 'potenial_matches']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -52,12 +58,15 @@ def save_entities_to_file(entities):
             writer.writerow({'name': entity.name, 'frequency': entity.frequency, 'main_match': entity.main_match, 'label':entity.label, 'description': entity.description, 'potenial_matches': entity.secondary_matches})
 
 def main():
+    logging.basicConfig(level=logging.INFO, filename=f'{constants.LOGGING_DIRECTORY}/wikidata.log')
     entities = load_entities_from_csv()
     for entity in entities:
         try:
-            get_entity_name(entity)
+            if entity.label == '':
+                get_entity_name(entity)
         except Exception:
-            pass
+            logging.error(f'Error while getting label for {entity.name}')
+            continue
     save_entities_to_file(entities)
 
 if __name__ == '__main__':

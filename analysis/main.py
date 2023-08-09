@@ -57,18 +57,19 @@ def perform_nel() -> None:
     nel.save_entities_to_file()
 
 def normalize() -> None:
-    logging.basicConfig(level=logging.INFO, filename='logs/normalize.log')
+    logging.basicConfig(level=logging.INFO, filename=f'{constants.LOGGING_DIRECTORY}/normalize.log')
     nel = NamedEntityLinker()
-    nel.load_entities_from_file('data/entities/entities.csv')
+    nel.load_entities_from_file(constants.ENTITIES_FILE)
     preProcessor = PreProcessor()
     preProcessor.linker = nel
     preProcessor.posts_source = 'mastodon'
-    for file in os.listdir(constants.PREPROCESSED_DIRECTORY_MASTODON):
-        with open(os.path.join(constants.PREPROCESSED_DIRECTORY_MASTODON, file), 'r') as f:
+    preprocessed_directory = constants.PREPROCESSED_DIRECTORY_MASTODON
+    for file in os.listdir(preprocessed_directory):
+        with open(os.path.join(preprocessed_directory, file), 'r') as f:
             logging.info(f'Loading file {file}')
             posts = ijson.items(f, 'item')
             posts = [Post.load_from_json(post) for post in posts]
             preProcessor.normalize_posts(posts)
 
 if __name__ == '__main__':
-    preprocess()
+    normalize()

@@ -8,6 +8,7 @@ import constants
 import csv
 from urllib.parse import quote
 from entity import Entity
+from post import Post
 from multiprocessing import Pool, cpu_count
 
 
@@ -17,11 +18,11 @@ class NamedEntityLinker:
         self.nlp = spacy.load(constants.SPACY_MODEL)
         self.entities_by_name = {}
 
-    def link(self, posts):
+    def link(self, posts: list[Post]) -> None:
         entities = sum([self.__get_entities(post) for post in posts], [])
         self.__update_entity_frequencies(entities)
 
-    def load_entities_from_file(self, filename):
+    def load_entities_from_file(self, filename: str) -> None:
         with open(filename, 'r', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
@@ -31,20 +32,21 @@ class NamedEntityLinker:
                 entity.label = row['label']
                 self.entities_by_name[entity.name] = entity
 
-    def remove_entites_below_frequency(self, frequency):
+    def remove_entites_below_frequency(self, frequency: int) -> None:
         self.entities_by_name = {key: value for key, value in self.entities_by_name.items() if value.frequency >= frequency}
     
-    def substitute_entites_by_ids(self, post_text):
-        entities_in_post = self.__get_entities(post_text)
-        for entity in entities_in_post:
+    def substitute_entites_by_ids(self, post: Post) -> None:
+        post_text = post.text
+        for entity in post.entities:
             name = entity.name.lower()
             if name in self.entities_by_name:
                 label = self.entities_by_name[name].label
                 post_text = post_text.replace(entity.name, label)
+                post.entities += entity
         
         return post_text
     
-    def __get_entities(self, post):
+    def __get_entities(self, post: Post) -> list[Entity]:
         doc = self.nlp(post)
         named_entities = textacy.extract.basics.entities(doc)
         noun_chunks = textacy.extract.basics.noun_chunks(doc)
@@ -59,7 +61,7 @@ class NamedEntityLinker:
 
         return [Entity(entity) for entity in entities]
 
-    def __update_entity_frequencies(self, entities):
+    def __update_entity_frequencies(self, entities: list[Entity]) -> None:
         for entity in entities:
             if entity.name not in self.entities_by_name:
                 self.entities_by_name[entity.name] = entity

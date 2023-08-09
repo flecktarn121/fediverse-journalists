@@ -33,7 +33,7 @@ class Post:
             'text': self.text,
             'verbatim_text': self.verbatim_text,
             'tokenized_text': list(self.tokenized_text),
-            'entities': list(self.entities),
+            'entities': [entity.to_dict() for entity in self.entities],
             'urls': list(self.urls),
             'mentions': list(self.mentions),
             'hashtags': list(self.hashtags),

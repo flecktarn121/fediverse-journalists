@@ -8,3 +8,11 @@ class Entity:
         self.description = ''
         self.label = ''
     
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'label': self.label,
+            'main_match': self.main_match,
+            'description': self.description,
+        }
+    

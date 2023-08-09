@@ -82,22 +82,23 @@ class PreProcessor:
           
         return text
   
-    def normalize_posts(self, posts):
+    def normalize_posts(self, posts: list[Post]) -> None:
         logging.info('Normalizing posts...')
         self.__substitute_entities_by_ids(posts)
 
-        tokenized_posts = self.__tokenize(posts)
-        self.__lematize_posts(tokenized_posts)
+        for post in posts:
+            post.tokenized_text = self.nlp(post.text)
+        self.__lematize_posts(posts)
 
         logging.info('Saving normalized posts...')
-        self.__save_posts_to_file(tokenized_posts, f'{constants.NORMALIZED_DIRECTORY}/{self.posts_source}/normalized_')
+        self.__save_posts_to_file(posts, f'{constants.NORMALIZED_DIRECTORY}/{self.posts_source}/normalized_')
     
     def create_lang_detector(self, nlp: Language, name: str) -> LanguageDetector:
         return LanguageDetector()
 
     def __substitute_entities_by_ids(self, posts: list[Post]) -> None:
         for post in posts:
-            post.text = self.linker.substitute_entites_by_ids(post.text)
+            post.text = self.linker.substitute_entites_by_ids(post)
 
 
     def __check_language_pipe(self) -> None:
@@ -111,7 +112,7 @@ class PreProcessor:
 
         return start <= post.timestamp <= end
 
-    def __lematize_posts(self, tokenized_posts):
+    def __lematize_posts(self, tokenized_posts: list[Post]) -> list[Post]:
         lemmatized_text = []
         for post in tokenized_posts:
             lemmatized_text += [token.lemma_ for token in post.tokenized_text if self.__is_word(token)]
