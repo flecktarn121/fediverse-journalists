@@ -1,5 +1,7 @@
 import ijson #type: ignore
 import os
+import sys
+sys.path.append('..')
 import constants
 
 
