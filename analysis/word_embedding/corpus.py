@@ -1,7 +1,7 @@
 import ijson #type: ignore
 import os
-import sys
-sys.path.append('..')
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import constants
 
 
@@ -15,10 +15,26 @@ def get_corpus_from_directory(directory: str) -> str:
                 corpus += ' '.join(texts)
     return corpus
 
-def save_corpus_to_file(filename: str) -> None:
-    with open(filename, "w") as f:
-        f.write(f'{constants.CORPUS_DIRECTORY}/{filename}')
+def save_corpus_to_file(filename: str, corpus: str) -> None:
+    with open(f'{constants.CORPUS_DIRECTORY}/{filename}', "w") as f:
+        f.write(corpus)
 
 def get_corpus_from_file(filename: str) -> str:
     with open(filename, "r") as f:
         return f.read()
+
+def main() -> None:
+    print('Loading twitter corpus')
+    corpus = get_corpus_from_directory(constants.NORMALIZED_DIRECTORY + '/twitter')
+    print('Saving twitter corpus')
+    save_corpus_to_file('twitter_corpus.txt', corpus)
+
+    print('Loading mastodon corpus')
+    corpus = get_corpus_from_directory(constants.NORMALIZED_DIRECTORY + '/mastodon')
+    print('Saving mastodon corpus')
+    save_corpus_to_file('mastodon_corpus.txt', corpus)
+
+    print('Done')
+
+if __name__ == '__main__':
+    main()
