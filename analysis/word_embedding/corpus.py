@@ -11,16 +11,16 @@ def get_corpus_from_directory(directory: str) -> str:
         if filename.endswith(".json"):
             with open(os.path.join(directory, filename), "r") as f:
                 posts = ijson.items(f, "item")
-                texts = [post["text"] for post in posts]
+                texts = [post["text"] + '\n' for post in posts]
                 corpus += ' '.join(texts)
     return corpus
 
 def save_corpus_to_file(filename: str, corpus: str) -> None:
-    with open(f'{constants.CORPUS_DIRECTORY}/{filename}', "w") as f:
+    with open(f'{constants.CORPUS_DIRECTORY}/{filename}', "w", encoding='utf-8') as f:
         f.write(corpus)
 
 def get_corpus_from_file(filename: str) -> str:
-    with open(filename, "r") as f:
+    with open(filename, "r", encoding='utf-8') as f:
         return f.read()
 
 def main() -> None:
