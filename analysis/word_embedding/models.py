@@ -3,8 +3,6 @@ import numpy as np
 from copy import deepcopy
 from gensim.models import Word2Vec #type: ignore
 from gensim.models.word2vec import LineSentence #type: ignore
-import os, sys
-import json
 import corpus as cp
 
 

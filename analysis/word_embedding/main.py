@@ -21,25 +21,19 @@ def main() -> None:
     print('Aligning models')
     tw_aligned_embs, mast_aligned_embs, (common_idx, common_iidx) = aligment.align_models(twitter_model, mastodon_model)
     
-    result = tw_aligned_embs[common_idx['trump']].dot(mast_aligned_embs[common_idx['trump']]) 
-    print(f'Cosine similarity between trump in twitter and mastodon: {result}')
-
-    return
     politics_words = [
                   'freedom', 'justice', 'equality', 'democracy', # political abstractions
                   'abortion', 'immigration', 'welfare', 'taxes', # partisan political issues   
                   'democrat', 'republican' # political parties               
                  ] # from Rodriguez and Spirling 2021
     for word in politics_words:
-        print(f'Querying twitter model for {word}')
-        near_words = models.query_models(word, twitter_model)
-        for word in near_words:
-            print(word)
-
-        print(f'Querying mastodon model for {word}')
-        near_words = models.query_models(word, mastodon_model)
-        for word in near_words:
-            print(word)
+        print(f'Cosine similarity for {word}')
+        if word not in common_idx:
+            print(f'{word} not found in both corpora')
+            continue
+        result = tw_aligned_embs[common_idx[word]].dot(mast_aligned_embs[common_idx[word]]) 
+        print(f'Cosine similarity between {word} in twitter and mastodon: {result}')
+        
 
 if __name__ == '__main__':
     main()
